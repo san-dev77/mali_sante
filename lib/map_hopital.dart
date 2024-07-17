@@ -4,7 +4,6 @@ import 'dart:io';
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:hopitalmap/detail_hopital.dart';
@@ -38,14 +37,14 @@ class _MapHopitalState extends State<MapHopital> {
   TextEditingController SearchController = TextEditingController();
   bool isLoading = true;
 
-  void ViewAllPrestataire(List<Map<String, dynamic>> data) {
+  void viewAllHopital(List<Map<String, dynamic>> data) {
     setState(() {
-      markers = data.map((prestataire) {
-        double latitude = double.tryParse(prestataire['latitude']) ?? 0.0;
-        double longitude = double.tryParse(prestataire['longitude']) ?? 0.0;
+      markers = data.map((data) {
+        double latitude = double.tryParse(data['latitude']) ?? 0.0;
+        double longitude = double.tryParse(data['longitude']) ?? 0.0;
         if (latitude != 0.0 && longitude != 0.0) {
           return Marker(
-            markerId: MarkerId(prestataire['id'].toString()),
+            markerId: MarkerId(data['id'].toString()),
             position: LatLng(latitude, longitude),
             onTap: () {
               showDialog<void>(
@@ -53,32 +52,28 @@ class _MapHopitalState extends State<MapHopital> {
                 barrierDismissible: false,
                 builder: (BuildContext context) {
                   return AlertDialog(
-                    content: SingleChildScrollView(
-                      child: ListBody(
-                        children: [
-                          Text(prestataire['libelle']),
-                          SizedBox(
-                            width: 50,
-                            child: Row(
-                              children: [
-                                AutoSizeText(
-                                  prestataire['latitude'],
-                                  maxLines: 1,
-                                  minFontSize: 6,
-                                  softWrap: true,
-                                  style: TextStyle(fontSize: 10),
-                                ),
-                                AutoSizeText(
-                                  prestataire['longitude'],
-                                  maxLines: 1,
-                                  minFontSize: 6,
-                                  softWrap: true,
-                                  style: TextStyle(fontSize: 10),
-                                ),
-                              ],
+                    content: Container(
+                      width: MediaQuery.of(context).size.width *
+                          0.8, // Largeur de la boîte de dialogue
+                      child: SingleChildScrollView(
+                        child: ListBody(
+                          children: [
+                            Text(
+                              data['libelle'],
+                              style: TextStyle(fontSize: 20),
                             ),
-                          )
-                        ],
+                            SizedBox(height: 10),
+                            Container(
+                              width: 200, // Largeur de l'image
+                              height: 200, // Hauteur de l'image
+                              child: Image.asset(
+                                data['imagePath'],
+                                fit: BoxFit
+                                    .cover, // Ajuster l'image pour couvrir le conteneur
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                     actions: <Widget>[
@@ -92,9 +87,10 @@ class _MapHopitalState extends State<MapHopital> {
                         child: const Text('Voir plus'),
                         onPressed: () async {
                           Navigator.of(context).push(MaterialPageRoute(
-                              builder: (context) => DetailHopital(
-                                    data: data,
-                                  )));
+                            builder: (context) => DetailHopital(
+                              data: data,
+                            ),
+                          ));
                         },
                       ),
                     ],
@@ -108,10 +104,10 @@ class _MapHopitalState extends State<MapHopital> {
           );
         } else {
           return Marker(
-            markerId: MarkerId(prestataire['id'].toString()),
+            markerId: MarkerId(data['id'].toString()),
             position: const LatLng(0.0, 0.0),
             infoWindow: InfoWindow(
-              title: prestataire['libelle'],
+              title: data['libelle'],
               snippet: 'Coordonnées non disponibles',
             ),
             icon: BitmapDescriptor.defaultMarkerWithHue(
@@ -143,7 +139,7 @@ class _MapHopitalState extends State<MapHopital> {
     super.initState();
     _verifyInternet();
     getCurrentLocation();
-    ViewAllPrestataire(data);
+    viewAllHopital(data);
   }
 
   getCurrentLocation() async {
@@ -161,13 +157,70 @@ class _MapHopitalState extends State<MapHopital> {
     }).catchError((e) {});
   }
 
+  Future<void> gotoLocation(
+      double latitude, double longitude, String name, data) async {
+    final GoogleMapController controller = await _controller.future;
+    controller.animateCamera(CameraUpdate.newCameraPosition(CameraPosition(
+      target: LatLng(latitude, longitude),
+      zoom: 14,
+      tilt: 50.0,
+      bearing: 45.0,
+    )));
+  }
+
+  void _showHospitalList(List<Map<String, dynamic>> data) {
+    showModalBottomSheet(
+      context: context,
+      builder: (context) {
+        return ListView.builder(
+          itemCount: data.length,
+          itemBuilder: (context, index) {
+            return ListTile(
+              onTap: () {
+                gotoLocation(
+                  double.parse(data[index]['latitude']),
+                  double.parse(data[index]['longitude']),
+                  data[index]['libelle'].toString(),
+                  data[index],
+                );
+              },
+              leading: Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Color.fromARGB(255, 63, 160, 217),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(Icons.medical_services_sharp,
+                    color: Colors.white),
+              ),
+              title: Text(
+                data[index]['libelle'].toString(),
+                overflow: TextOverflow.ellipsis,
+                maxLines: 3,
+              ),
+              trailing: IconButton(
+                icon: const Icon(Icons.chevron_right),
+                onPressed: () {
+                  Navigator.of(context).push(MaterialPageRoute(
+                      builder: (context) => DetailHopital(
+                            data: data[index],
+                          )));
+                },
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       resizeToAvoidBottomInset: false,
       appBar: AppBar(
         title: const Text(
-          "Réseau de data ",
+          "Map hopital",
           style: TextStyle(fontSize: 16),
         ),
         backgroundColor: Colors.white,
@@ -176,7 +229,7 @@ class _MapHopitalState extends State<MapHopital> {
             child: const Icon(
               Icons.gps_fixed,
               size: 28,
-              color: Colors.orange,
+              color: Color.fromARGB(255, 63, 160, 217),
             ),
             onTap: () {
               getCurrentLocation();
@@ -185,14 +238,15 @@ class _MapHopitalState extends State<MapHopital> {
           const SizedBox(width: 10)
         ],
       ),
-      body: Container(
-        width: MediaQuery.of(context).size.width,
-        // height: MediaQuery.of(context).size.height,
-        color: Colors.white,
-        child: Column(
-          children: <Widget>[
-            buildGoogleMap(context),
-          ],
+      body: buildGoogleMap(context),
+      floatingActionButton: FloatingActionButton(
+        backgroundColor: Color.fromARGB(255, 63, 160, 217),
+        onPressed: () {
+          _showHospitalList(data);
+        },
+        child: const Icon(
+          Icons.list,
+          color: Colors.white,
         ),
       ),
     );
@@ -224,8 +278,6 @@ class _MapHopitalState extends State<MapHopital> {
 
   Widget buildGoogleMap(BuildContext context) {
     return SizedBox(
-      height: MediaQuery.of(context).size.height / 2,
-      width: MediaQuery.of(context).size.width,
       child: GoogleMap(
         mapType: MapType.normal,
         myLocationEnabled: true,

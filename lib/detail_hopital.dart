@@ -18,7 +18,7 @@ class DetailHopital extends StatelessWidget {
                 child: ClipPath(
                   child: SizedBox(
                     width: double.infinity,
-                    child: Image.asset("assets/images/logo.png"),
+                    child: Image.asset(data['imagePath']),
                   ),
                 ),
               ),
@@ -33,30 +33,31 @@ class DetailHopital extends StatelessWidget {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            SizedBox(
-                                //   child: AutoSizeText(
-                                //     maxLines: 2,
-                                //     minFontSize: 17,
-                                //     style: const TextStyle(
-                                //       fontWeight: FontWeight.w800,
-                                //     ),
-                                //   ),
+                            if (data != null && data['libelle'] != null)
+                              AutoSizeText(
+                                data['libelle'],
+                                maxLines: 2,
+                                minFontSize: 17,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w800,
                                 ),
+                              ),
                             Divider(
                               color: Colors.grey[300],
                             ),
-                            if (data['contact'].isNotEmpty)
+                            if (data != null && data['contact'] != null)
                               ContactRow(
                                 label: "Téléphone",
                                 contact: data['contact'],
                               ),
-                            if (data['contact2'].isNotEmpty)
+                            if (data != null && data['contact2'] != null)
                               ContactRow(
                                 label: "Téléphone",
                                 contact: data['contact2'],
                               ),
-                            if (data['latitude'].isNotEmpty &&
-                                data['longitude'].isNotEmpty)
+                            if (data != null &&
+                                data['latitude'] != null &&
+                                data['longitude'] != null)
                               Column(
                                 children: [
                                   Divider(
@@ -66,7 +67,7 @@ class DetailHopital extends StatelessWidget {
                                     mainAxisAlignment:
                                         MainAxisAlignment.spaceBetween,
                                     children: [
-                                      const Row(
+                                      Row(
                                         children: [
                                           Icon(
                                             Icons.map_rounded,
@@ -156,25 +157,26 @@ class ContactRow extends StatelessWidget {
       children: [
         Row(
           children: [
-            const Icon(
+            Icon(
               Icons.call,
               color: Color.fromARGB(255, 63, 160, 217),
               size: 35,
             ),
-            const SizedBox(
+            SizedBox(
               width: 20.0,
             ),
             Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   label,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 15.0,
                   ),
                 ),
                 Text(
                   contact,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontWeight: FontWeight.w300,
                   ),
                 ),
@@ -184,12 +186,8 @@ class ContactRow extends StatelessWidget {
         ),
         IconButton(
           onPressed: () async {
-            final phoneUrl = Uri(scheme: 'tel', path: contact);
-            await canLaunchUrl(phoneUrl).then((bool result) {
-              if (result) {
-                launchUrl(phoneUrl);
-              }
-            });
+            final phoneUrl = 'tel:$contact';
+            await launch(phoneUrl);
           },
           icon: const Icon(
             Icons.arrow_circle_right_outlined,
