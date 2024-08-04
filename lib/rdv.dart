@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'api.dart';
 
-class AppointmentsPage extends StatefulWidget {
+class AppointmentsPage_rdv extends StatefulWidget {
   @override
   _AppointmentsPageState createState() => _AppointmentsPageState();
 }
 
-class _AppointmentsPageState extends State<AppointmentsPage> {
+class _AppointmentsPageState extends State<AppointmentsPage_rdv> {
   final ApiService apiService = ApiService();
   List<dynamic> _appointments = [];
 

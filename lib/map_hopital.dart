@@ -1,17 +1,19 @@
 import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:hopitalmap/pages/geo/google_places_service.dart';
 
 class MapHopital extends StatefulWidget {
   final LatLng initialPosition;
   final List<Map<String, dynamic>> places;
+  final LatLng currentLocation;
 
-  const MapHopital(
-      {required this.initialPosition, required this.places, Key? key})
-      : super(key: key);
+  const MapHopital({
+    required this.initialPosition,
+    required this.places,
+    required this.currentLocation,
+    Key? key,
+  }) : super(key: key);
 
   @override
   State<MapHopital> createState() => _MapHopitalState();
@@ -20,7 +22,7 @@ class MapHopital extends StatefulWidget {
 class _MapHopitalState extends State<MapHopital> {
   final Completer<GoogleMapController> _controller = Completer();
   late GoogleMapController mapController;
-  late Position currentPosition; // Déclaration de la variable currentPosition
+  late Position currentPosition; // Define currentPosition
 
   Set<Marker> markers = {};
 
@@ -28,18 +30,22 @@ class _MapHopitalState extends State<MapHopital> {
   void initState() {
     super.initState();
     _setInitialMarkers();
+    _getCurrentLocation(); // Call to initialize currentPosition
   }
 
   _setInitialMarkers() {
     setState(() {
       markers = widget.places.map((place) {
+        double lat = double.tryParse(place['lat']) ?? 0.0;
+        double lon = double.tryParse(place['lon']) ?? 0.0;
+        String placeId = place['place_id'].toString();
+        String displayName = place['display_name'].toString();
         return Marker(
-          markerId: MarkerId(place['place_id']),
-          position: LatLng(place['geometry']['location']['lat'],
-              place['geometry']['location']['lng']),
+          markerId: MarkerId(placeId.isNotEmpty ? placeId : displayName),
+          position: LatLng(lat, lon),
           infoWindow: InfoWindow(
-            title: place['name'],
-            snippet: 'Distance: ${place['distance'] ?? 'N/A'}',
+            title: displayName,
+            snippet: 'Distance: ${place['distance'].toString()}',
           ),
           icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRed),
         );
@@ -65,6 +71,23 @@ class _MapHopitalState extends State<MapHopital> {
     )));
   }
 
+  Future<void> _getCurrentLocation() async {
+    LocationPermission permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+    }
+
+    Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.best)
+        .then((Position position) {
+      setState(() {
+        currentPosition = position;
+      });
+      myLocation(position.latitude, position.longitude, "Vous êtes ici", null);
+    }).catchError((e) {
+      print(e);
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -80,7 +103,7 @@ class _MapHopitalState extends State<MapHopital> {
         scrollGesturesEnabled: true,
         zoomControlsEnabled: true,
         initialCameraPosition: CameraPosition(
-          target: widget.initialPosition,
+          target: widget.currentLocation,
           zoom: 14,
         ),
         markers: markers,
@@ -92,25 +115,10 @@ class _MapHopitalState extends State<MapHopital> {
       floatingActionButton: FloatingActionButton(
         backgroundColor: Colors.blue,
         onPressed: () {
-          getCurrentLocation();
+          _getCurrentLocation();
         },
         child: const Icon(Icons.gps_fixed),
       ),
     );
-  }
-
-  getCurrentLocation() async {
-    LocationPermission permission = await Geolocator.checkPermission();
-    if (permission == LocationPermission.denied) {
-      permission = await Geolocator.requestPermission();
-    }
-
-    Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.best)
-        .then((Position position) {
-      setState(() {
-        currentPosition = position;
-      });
-      myLocation(position.latitude, position.longitude, "Vous êtes ici", null);
-    }).catchError((e) {});
   }
 }

@@ -148,11 +148,10 @@ class WelcomePage extends StatelessWidget {
                               child: ElevatedButton.icon(
                                 onPressed: () {
                                   Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                          builder: (context) =>
-                                              HomePage()) //ConnexionPage()),
-                                      );
+                                    context,
+                                    MaterialPageRoute(
+                                        builder: (context) => ConnexionPage()),
+                                  );
                                 },
                                 icon: Icon(Icons.login),
                                 label: Text("Connexion"),

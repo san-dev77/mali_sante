@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 class ApiService {
-  static const String baseUrl = 'http://192.168.131.112:8000/api';
+  static const String baseUrl = 'http://192.168.43.18:8000/api';
 
   Future<List<dynamic>> getAppointments() async {
     try {

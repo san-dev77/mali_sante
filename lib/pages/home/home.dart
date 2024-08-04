@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:animate_do/animate_do.dart';
 import 'package:hopitalmap/map_hopital.dart';
+import 'package:hopitalmap/pages/carnet/carnet.dart';
 import 'package:hopitalmap/pages/chat_bot/chat.dart';
 import 'package:hopitalmap/pages/consultation/consultation.dart';
+import 'package:hopitalmap/pages/consultation/patient.dart';
 import 'package:hopitalmap/pages/forms/login.dart';
 import 'package:hopitalmap/pages/forms/sign_up.dart';
 import 'package:hopitalmap/pages/geo/centreListePage.dart';
@@ -11,6 +13,7 @@ import 'package:hopitalmap/pages/note/centreListePage.dart';
 import 'package:hopitalmap/pages/note/note.dart';
 import 'package:hopitalmap/pages/profil/profil.dart';
 import 'package:hopitalmap/pages/rdv/rdv.dart';
+import 'package:hopitalmap/rdv.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -237,7 +240,7 @@ class _HomePageState extends State<HomePage> {
                                     'assets/Icones/carnet.png', // Path to your feature image
                                 text: 'Mon carnet',
                                 destination:
-                                    HomePage(), // Change to your target page
+                                    AppointmentsPage_rdv(), // Change to your target page
                               ),
                               _buildFeatureCard(
                                 context,
@@ -309,7 +312,7 @@ class _HomePageState extends State<HomePage> {
               break;
             case 2:
               Navigator.push(context,
-                  MaterialPageRoute(builder: (context) => CalendarPage()));
+                  MaterialPageRoute(builder: (context) => AppointmentsPage()));
               break;
             case 3:
               Navigator.push(context,
