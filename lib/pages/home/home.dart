@@ -4,6 +4,7 @@ import 'package:hopitalmap/map_hopital.dart';
 import 'package:hopitalmap/pages/carnet/carnet.dart';
 import 'package:hopitalmap/pages/chat_bot/chat.dart';
 import 'package:hopitalmap/pages/consultation/consultation.dart';
+import 'package:hopitalmap/pages/consultation/models.dart';
 import 'package:hopitalmap/pages/consultation/patient.dart';
 import 'package:hopitalmap/pages/forms/login.dart';
 import 'package:hopitalmap/pages/forms/sign_up.dart';
@@ -14,6 +15,8 @@ import 'package:hopitalmap/pages/note/note.dart';
 import 'package:hopitalmap/pages/profil/profil.dart';
 import 'package:hopitalmap/pages/rdv/rdv.dart';
 import 'package:hopitalmap/rdv.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -44,6 +47,7 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   late String greeting;
   int adviceIndex = 0;
+  double _rating = 3.0; // Default rating
   List<String> advices = [
     "Prenez soin de votre santé mentale.",
     "Buvez beaucoup d'eau chaque jour.",
@@ -90,6 +94,115 @@ class _HomePageState extends State<HomePage> {
     });
   }
 
+  void _contactUs() async {
+    final Uri emailUri = Uri(
+      scheme: 'mailto',
+      path: 'support@malisante.com',
+      query: 'subject=Assistance&body=Bonjour,',
+    );
+    if (await canLaunch(emailUri.toString())) {
+      await launch(emailUri.toString());
+    } else {
+      _showErrorDialog('Impossible d\'ouvrir l\'application de messagerie.');
+    }
+  }
+
+  void _showRatingDialog() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text("Noter nous"),
+          content: RatingBar.builder(
+            initialRating: _rating,
+            minRating: 1,
+            direction: Axis.horizontal,
+            allowHalfRating: true,
+            itemCount: 5,
+            itemPadding: EdgeInsets.symmetric(horizontal: 4.0),
+            itemBuilder: (context, _) => Icon(
+              Icons.star,
+              color: Colors.amber,
+            ),
+            onRatingUpdate: (rating) {
+              setState(() {
+                _rating = rating;
+              });
+            },
+          ),
+          actions: <Widget>[
+            TextButton(
+              child: Text("Envoyer"),
+              onPressed: () {
+                Navigator.of(context).pop();
+                // Envoyer la note
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _showRegionDialog() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text("Changer de région"),
+          content: SingleChildScrollView(
+            child: ListBody(
+              children: [
+                ListTile(
+                  title: Text('Bamako'),
+                  onTap: () {
+                    // Changer de région
+                    Navigator.of(context).pop();
+                  },
+                ),
+                ListTile(
+                  title: Text('Kayes'),
+                  onTap: () {
+                    // Changer de région
+                    Navigator.of(context).pop();
+                  },
+                ),
+                ListTile(
+                  title: Text('Koulikoro'),
+                  onTap: () {
+                    // Changer de région
+                    Navigator.of(context).pop();
+                  },
+                ),
+                // Ajoutez d'autres régions ici
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  void _showErrorDialog(String message) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text("Erreur"),
+          content: Text(message),
+          actions: <Widget>[
+            TextButton(
+              child: Text("OK"),
+              onPressed: () {
+                Navigator.of(context).pop(); // Fermer la popup
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -116,23 +229,17 @@ class _HomePageState extends State<HomePage> {
             ListTile(
               leading: Icon(Icons.contact_mail),
               title: Text('Nous contacter'),
-              onTap: () {
-                // Action for contacting us
-              },
+              onTap: _contactUs,
             ),
             ListTile(
               leading: Icon(Icons.rate_review),
               title: Text('Notez nous'),
-              onTap: () {
-                // Action for rating
-              },
+              onTap: _showRatingDialog,
             ),
             ListTile(
               leading: Icon(Icons.settings),
               title: Text('Paramètres'),
-              onTap: () {
-                // Action for settings
-              },
+              onTap: _showRegionDialog,
             ),
           ],
         ),
@@ -240,7 +347,7 @@ class _HomePageState extends State<HomePage> {
                                     'assets/Icones/carnet.png', // Path to your feature image
                                 text: 'Mon carnet',
                                 destination:
-                                    AppointmentsPage_rdv(), // Change to your target page
+                                    PatientMedicalRecordPage(), // Change to your target page
                               ),
                               _buildFeatureCard(
                                 context,
@@ -260,8 +367,8 @@ class _HomePageState extends State<HomePage> {
                               _buildFeatureCard(
                                 context,
                                 imagePath:
-                                    'assets/Icones/note.png', // Path to your feature image
-                                text: 'Note et avis',
+                                    'assets/Icones/centre.png', // Path to your feature image
+                                text: 'Centres',
                                 destination: CentresListPage_note(),
                               ),
                             ],
@@ -311,8 +418,10 @@ class _HomePageState extends State<HomePage> {
                       builder: (context) => CentresListPage_map()));
               break;
             case 2:
-              Navigator.push(context,
-                  MaterialPageRoute(builder: (context) => AppointmentsPage()));
+              Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) => DoctorAvailabilityPage()));
               break;
             case 3:
               Navigator.push(context,

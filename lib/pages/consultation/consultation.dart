@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:animate_do/animate_do.dart';
-import 'pre-consultation.dart';
+import 'package:hopitalmap/pages/consultation/online_consultation.dart';
+import 'package:hopitalmap/pages/consultation/pre-consultation.dart';
+import 'package:hopitalmap/pages/home/home.dart';
+import 'package:hopitalmap/pages/rdv/rdv.dart';
 
 class ConsultationsPage extends StatelessWidget {
   @override
@@ -66,26 +69,16 @@ class ConsultationsPage extends StatelessWidget {
                       ),
                       _buildConsultationCard(
                         context,
-                        title: 'Consultations Passées',
-                        icon: Icons.history,
+                        title: 'Consultation en Ligne',
+                        icon: Icons.video_call,
                         onTap: () {
-                          // Navigate to past consultations
-                        },
-                      ),
-                      _buildConsultationCard(
-                        context,
-                        title: 'Mes Rendez-vous',
-                        icon: Icons.calendar_today,
-                        onTap: () {
-                          // Navigate to appointments
-                        },
-                      ),
-                      _buildConsultationCard(
-                        context,
-                        title: 'Paramètres de Santé',
-                        icon: Icons.settings,
-                        onTap: () {
-                          // Navigate to health settings
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) => ConsultationPage(
+                                      doctorName: 'Dr. Smith',
+                                    )),
+                          );
                         },
                       ),
                     ],

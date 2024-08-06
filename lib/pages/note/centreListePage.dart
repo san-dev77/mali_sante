@@ -1,27 +1,206 @@
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import 'package:hopitalmap/centre_api.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:hopitalmap/pages/note/note.dart';
 
-class Centre {
-  final String name;
-  final String address;
-  final double rating;
-
-  Centre({required this.name, required this.address, required this.rating});
+class CentresListPage_note extends StatefulWidget {
+  @override
+  _CentresListPage_noteState createState() => _CentresListPage_noteState();
 }
 
-List<Centre> centres = [
-  Centre(name: 'Centre Médical 1', address: '123 Rue de la Santé', rating: 4.5),
-  Centre(name: 'Hôpital Général', address: '456 Avenue des Soins', rating: 4.0),
-  Centre(
-      name: 'Clinique du Bien-être',
-      address: '789 Boulevard de la Santé',
-      rating: 4.8),
-];
+class _CentresListPage_noteState extends State<CentresListPage_note> {
+  late Future<List<Etablissement>> futureEtablissements;
 
-class CentresListPage_note extends StatelessWidget {
+  @override
+  void initState() {
+    super.initState();
+    futureEtablissements = fetchEtablissements();
+  }
+
+  Future<List<Etablissement>> fetchEtablissements() async {
+    try {
+      final response = await http
+          .get(Uri.parse('http://192.168.43.18:8000/api/etablissement'));
+
+      if (response.statusCode == 200) {
+        Map<String, dynamic> jsonResponse = json.decode(response.body);
+        List<dynamic> etablissementsJson = jsonResponse['items'];
+        return etablissementsJson
+            .map((etablissement) => Etablissement.fromJson(etablissement))
+            .toList();
+      } else {
+        print(
+            'Failed to load centres: ${response.statusCode} ${response.reasonPhrase}');
+        throw Exception('Failed to load centres');
+      }
+    } catch (e) {
+      print('Failed to load centres: $e');
+      throw Exception('Failed to load centres: $e');
+    }
+  }
+
+  void _showContactOptions(Etablissement etablissement) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text("Contact ${etablissement.nom}"),
+          content: Text("Choisissez une option pour contacter le centre."),
+          actions: <Widget>[
+            TextButton(
+              child: Text("Appeler"),
+              onPressed: () {
+                Navigator.of(context).pop();
+                _makePhoneCall(etablissement.telephone);
+              },
+            ),
+            TextButton(
+              child: Text("Envoyer un e-mail"),
+              onPressed: () {
+                Navigator.of(context).pop();
+                _sendEmail(etablissement.email);
+              },
+            ),
+            TextButton(
+              child: Text("Annuler"),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<void> _makePhoneCall(String phoneNumber) async {
+    final Uri launchUri = Uri(
+      scheme: 'tel',
+      path: phoneNumber,
+    );
+    await launch(launchUri.toString());
+  }
+
+  Future<void> _sendEmail(String emailAddress) async {
+    final Uri launchUri = Uri(
+      scheme: 'mailto',
+      path: emailAddress,
+    );
+    await launch(launchUri.toString());
+  }
+
+  Widget _buildPlaceCard(Etablissement etablissement) {
+    return GestureDetector(
+      onTap: () => _showContactOptions(etablissement),
+      child: Card(
+        color: Colors.white,
+        elevation: 5,
+        margin: EdgeInsets.all(10),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(15),
+        ),
+        child: Padding(
+          padding: EdgeInsets.all(10),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                etablissement.nom,
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black,
+                ),
+              ),
+              SizedBox(height: 5),
+              Row(
+                children: [
+                  Icon(Icons.location_on, color: Colors.red),
+                  SizedBox(width: 5),
+                  Text(
+                    etablissement.localite,
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Colors.grey[700],
+                    ),
+                  ),
+                ],
+              ),
+              SizedBox(height: 5),
+              Row(
+                children: [
+                  Icon(Icons.phone, color: Colors.green),
+                  SizedBox(width: 5),
+                  Text(
+                    etablissement.telephone,
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Colors.grey[700],
+                    ),
+                  ),
+                ],
+              ),
+              SizedBox(height: 5),
+              Row(
+                children: [
+                  Icon(Icons.email, color: Colors.blue),
+                  SizedBox(width: 5),
+                  Text(
+                    etablissement.email,
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Colors.grey[700],
+                    ),
+                  ),
+                ],
+              ),
+              SizedBox(height: 10),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  TextButton.icon(
+                    icon: Icon(Icons.rate_review, color: Colors.white),
+                    label: Text(
+                      'Laisser une note',
+                      style: TextStyle(color: Colors.white),
+                    ),
+                    style: TextButton.styleFrom(
+                      backgroundColor: Colors.blue,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => NoteAvisPage(),
+                        ),
+                      );
+                    },
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        backgroundColor: Colors.blue,
+        title: Text('Liste des Centres'),
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back, color: Colors.white),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
+      ),
       body: Stack(
         children: [
           // Background image
@@ -41,40 +220,27 @@ class CentresListPage_note extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Text(
-                    'Liste des Centres',
-                    style: TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                ),
                 Expanded(
-                  child: ListView.builder(
-                    itemCount: centres.length,
-                    itemBuilder: (context, index) {
-                      final centre = centres[index];
-                      return Card(
-                        margin: const EdgeInsets.symmetric(
-                            vertical: 10, horizontal: 16),
-                        child: ListTile(
-                          title: Text(centre.name),
-                          subtitle: Text(centre.address),
-                          trailing: Icon(Icons.arrow_forward),
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => NoteAvisPage(),
-                              ),
-                            );
+                  child: FutureBuilder<List<Etablissement>>(
+                    future: futureEtablissements,
+                    builder: (context, snapshot) {
+                      if (snapshot.connectionState == ConnectionState.waiting) {
+                        return Center(child: CircularProgressIndicator());
+                      } else if (snapshot.hasError) {
+                        return Center(
+                            child: Text(
+                                'Failed to load centres: ${snapshot.error}'));
+                      } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                        return Center(child: Text('No centres available'));
+                      } else {
+                        return ListView.builder(
+                          itemCount: snapshot.data!.length,
+                          itemBuilder: (context, index) {
+                            final etablissement = snapshot.data![index];
+                            return _buildPlaceCard(etablissement);
                           },
-                        ),
-                      );
+                        );
+                      }
                     },
                   ),
                 ),
@@ -82,13 +248,6 @@ class CentresListPage_note extends StatelessWidget {
             ),
           ),
         ],
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          Navigator.pop(context);
-        },
-        child: Icon(Icons.arrow_back),
-        backgroundColor: Colors.white,
       ),
     );
   }

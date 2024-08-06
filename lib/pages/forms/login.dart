@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:hopitalmap/doctor/doctor.dart';
 import 'package:hopitalmap/pages/welcome/welcome_page.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
+import 'package:hopitalmap/pages/home/home.dart';
+import 'package:hopitalmap/doctor/doctor.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class ConnexionPage extends StatefulWidget {
   const ConnexionPage({Key? key}) : super(key: key);
@@ -17,33 +19,27 @@ class _ConnexionPageState extends State<ConnexionPage> {
 
   void _login() async {
     if (_formKey.currentState!.validate()) {
-      final response = await http.post(
-        Uri.parse(
-            'http://192.168.43.207:8000/api/login'), // Remplacez par l'URL de votre API
-        headers: <String, String>{
-          'Content-Type': 'application/json; charset=UTF-8',
-        },
-        body: jsonEncode(<String, String>{
-          'email': _emailController.text,
-          'password': _passwordController.text,
-        }),
-      );
+      // Sauvegarde des données de connexion dans les préférences partagées
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      await prefs.setString('email', _emailController.text);
 
-      if (response.statusCode == 200) {
-        final responseData = json.decode(response.body);
-        final token = responseData['token'];
-        if (token != null) {
-          _showSuccessDialog();
-        } else {
-          _showErrorDialog('Token manquant');
-        }
+      // Détermine le type d'utilisateur basé sur le mot de passe
+      String role;
+      if (_passwordController.text.contains('p')) {
+        role = 'patient';
+        await prefs.setString('role', role);
+        _showSuccessDialog(HomePage());
+      } else if (_passwordController.text.contains('m')) {
+        role = 'doctor';
+        await prefs.setString('role', role);
+        _showSuccessDialog(DoctorHomePage());
       } else {
-        _showErrorDialog('Échec de la connexion');
+        _showErrorDialog("Mot de passe invalide.");
       }
     }
   }
 
-  void _showSuccessDialog() {
+  void _showSuccessDialog(Widget homePage) {
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -55,8 +51,10 @@ class _ConnexionPageState extends State<ConnexionPage> {
               child: Text("OK"),
               onPressed: () {
                 Navigator.of(context).pop(); // Fermer la popup
-                Navigator.pushReplacementNamed(
-                    context, '/home'); // Rediriger vers la page d'accueil
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => homePage),
+                ); // Rediriger vers la page d'accueil appropriée
               },
             ),
           ],
@@ -90,18 +88,15 @@ class _ConnexionPageState extends State<ConnexionPage> {
     return Scaffold(
       body: Stack(
         children: [
-          // Background image
           Positioned.fill(
             child: Image.asset(
-              'assets/img/bg1.jpg', // Change this path to your image path
+              'assets/img/bg1.jpg',
               fit: BoxFit.cover,
             ),
           ),
-          // Overlay effect
           Positioned.fill(
             child: Container(
-              color:
-                  Colors.black.withOpacity(0.5), // Change the opacity as needed
+              color: Colors.black.withOpacity(0.5),
             ),
           ),
           Center(
@@ -116,8 +111,7 @@ class _ConnexionPageState extends State<ConnexionPage> {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Image.asset("assets/Icones/logo_app.png", height: 100),
-                        SizedBox(
-                            width: 10), // Espacement entre l'image et le texte
+                        SizedBox(width: 10),
                         Text(
                           "Mali Santé",
                           style: TextStyle(
@@ -128,8 +122,7 @@ class _ConnexionPageState extends State<ConnexionPage> {
                         ),
                       ],
                     ),
-                    SizedBox(
-                        height: 50), // Espacement entre la rangée et le bouton
+                    SizedBox(height: 50),
                     Text(
                       "Connexion",
                       style: TextStyle(
@@ -205,10 +198,8 @@ class _ConnexionPageState extends State<ConnexionPage> {
             left: 10,
             child: FloatingActionButton(
               onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => WelcomePage()),
-                );
+                Navigator.push(context,
+                    MaterialPageRoute(builder: (context) => WelcomePage()));
               },
               child: Icon(Icons.arrow_back),
             ),
@@ -217,4 +208,15 @@ class _ConnexionPageState extends State<ConnexionPage> {
       ),
     );
   }
+}
+
+void main() {
+  runApp(MaterialApp(
+    home: ConnexionPage(),
+    routes: {
+      '/home': (context) => HomePage(),
+      '/patient': (context) => HomePage(),
+      '/doctor': (context) => DoctorHomePage(),
+    },
+  ));
 }

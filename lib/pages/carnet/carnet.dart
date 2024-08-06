@@ -1,222 +1,62 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
-class MedicalRecordPage extends StatefulWidget {
+class PatientMedicalRecordPage extends StatefulWidget {
   @override
-  _MedicalRecordPageState createState() => _MedicalRecordPageState();
+  _PatientMedicalRecordPageState createState() =>
+      _PatientMedicalRecordPageState();
 }
 
-class _MedicalRecordPageState extends State<MedicalRecordPage> {
-  final List<Map<String, String>> medicalRecords = [];
+class _PatientMedicalRecordPageState extends State<PatientMedicalRecordPage> {
+  List<String> selectedSymptoms = [];
+  List<String> treatments = [];
 
-  final _formKey = GlobalKey<FormState>();
-  final TextEditingController _nameController = TextEditingController();
-  final TextEditingController _ageController = TextEditingController();
-  final TextEditingController _sexController = TextEditingController();
-  final TextEditingController _bloodGroupController = TextEditingController();
-  final TextEditingController _allergiesController = TextEditingController();
-  final TextEditingController _medicationsController = TextEditingController();
-  final TextEditingController _vaccinationsController = TextEditingController();
-  final TextEditingController _reportsController = TextEditingController();
-
-  void _addMedicalRecord() {
-    if (_formKey.currentState!.validate()) {
-      setState(() {
-        medicalRecords.add({
-          'name': _nameController.text,
-          'age': _ageController.text,
-          'sex': _sexController.text,
-          'bloodGroup': _bloodGroupController.text,
-          'allergies': _allergiesController.text,
-          'medications': _medicationsController.text,
-          'vaccinations': _vaccinationsController.text,
-          'reports': _reportsController.text,
-        });
-      });
-      _nameController.clear();
-      _ageController.clear();
-      _sexController.clear();
-      _bloodGroupController.clear();
-      _allergiesController.clear();
-      _medicationsController.clear();
-      _vaccinationsController.clear();
-      _reportsController.clear();
-      Navigator.pop(context);
-    }
+  @override
+  void initState() {
+    super.initState();
+    _loadMedicalData();
   }
 
-  void _showAddRecordDialog() {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text('Ajouter une fiche médicale'),
-          content: SingleChildScrollView(
-            child: Form(
-              key: _formKey,
-              child: Column(
-                children: [
-                  TextFormField(
-                    controller: _nameController,
-                    decoration: InputDecoration(labelText: 'Nom'),
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Veuillez entrer un nom';
-                      }
-                      return null;
-                    },
-                  ),
-                  TextFormField(
-                    controller: _ageController,
-                    decoration: InputDecoration(labelText: 'Âge'),
-                    keyboardType: TextInputType.number,
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Veuillez entrer un âge';
-                      }
-                      return null;
-                    },
-                  ),
-                  TextFormField(
-                    controller: _sexController,
-                    decoration: InputDecoration(labelText: 'Sexe'),
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Veuillez entrer le sexe';
-                      }
-                      return null;
-                    },
-                  ),
-                  TextFormField(
-                    controller: _bloodGroupController,
-                    decoration: InputDecoration(labelText: 'Groupe sanguin'),
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Veuillez entrer le groupe sanguin';
-                      }
-                      return null;
-                    },
-                  ),
-                  TextFormField(
-                    controller: _allergiesController,
-                    decoration: InputDecoration(labelText: 'Allergies'),
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Veuillez entrer les allergies';
-                      }
-                      return null;
-                    },
-                  ),
-                  TextFormField(
-                    controller: _medicationsController,
-                    decoration: InputDecoration(labelText: 'Médicaments'),
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Veuillez entrer les médicaments';
-                      }
-                      return null;
-                    },
-                  ),
-                  TextFormField(
-                    controller: _vaccinationsController,
-                    decoration: InputDecoration(labelText: 'Vaccinations'),
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Veuillez entrer les vaccinations';
-                      }
-                      return null;
-                    },
-                  ),
-                  TextFormField(
-                    controller: _reportsController,
-                    decoration: InputDecoration(labelText: 'Rapports médicaux'),
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Veuillez entrer les rapports médicaux';
-                      }
-                      return null;
-                    },
-                  ),
-                ],
-              ),
-            ),
-          ),
-          actions: [
-            TextButton(
-              child: Text('Annuler'),
-              onPressed: () {
-                Navigator.pop(context);
-              },
-            ),
-            TextButton(
-              child: Text('Ajouter'),
-              onPressed: _addMedicalRecord,
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  Widget _buildMedicalRecordCard(Map<String, String> record) {
-    return Card(
-      margin: EdgeInsets.all(10),
-      child: Padding(
-        padding: EdgeInsets.all(10),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Nom: ${record['name']}',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-            ),
-            Text('Âge: ${record['age']}'),
-            Text('Sexe: ${record['sex']}'),
-            Text('Groupe sanguin: ${record['bloodGroup']}'),
-            Text('Allergies: ${record['allergies']}'),
-            Text('Médicaments: ${record['medications']}'),
-            Text('Vaccinations: ${record['vaccinations']}'),
-            Text('Rapports médicaux: ${record['reports']}'),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                IconButton(
-                  icon: Icon(Icons.edit),
-                  onPressed: () {
-                    // Implement edit functionality
-                  },
-                ),
-                IconButton(
-                  icon: Icon(Icons.delete),
-                  onPressed: () {
-                    setState(() {
-                      medicalRecords.remove(record);
-                    });
-                  },
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
+  _loadMedicalData() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    setState(() {
+      selectedSymptoms = prefs.getStringList('selectedSymptoms') ?? [];
+      treatments = prefs.getStringList('treatments') ?? [];
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Carnet Médical'),
+        title: Text('Mon Carnet Médical'),
+        backgroundColor: Colors.blue,
       ),
-      body: ListView.builder(
-        itemCount: medicalRecords.length,
-        itemBuilder: (context, index) {
-          final record = medicalRecords[index];
-          return _buildMedicalRecordCard(record);
-        },
-      ),
-      floatingActionButton: FloatingActionButton(
-        child: Icon(Icons.add),
-        onPressed: _showAddRecordDialog,
+      body: Padding(
+        padding: const EdgeInsets.all(10.0),
+        child: ListView(
+          children: [
+            Text(
+              'Symptômes sélectionnés :',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            SizedBox(height: 10),
+            ...selectedSymptoms.map((symptom) => ListTile(
+                  title: Text(symptom),
+                  leading: Icon(Icons.check, color: Colors.blue),
+                )),
+            SizedBox(height: 20),
+            Text(
+              'Traitements prescrits :',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            SizedBox(height: 10),
+            ...treatments.map((treatment) => ListTile(
+                  title: Text(treatment),
+                  leading: Icon(Icons.medical_services, color: Colors.green),
+                )),
+          ],
+        ),
       ),
     );
   }

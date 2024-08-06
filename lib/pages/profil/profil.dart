@@ -33,7 +33,7 @@ class ProfilPage extends StatelessWidget {
                   ),
                   SizedBox(height: 20),
                   Text(
-                    'John Doe',
+                    'Ada Dao',
                     style: TextStyle(
                       fontSize: 28,
                       fontWeight: FontWeight.bold,
@@ -42,7 +42,7 @@ class ProfilPage extends StatelessWidget {
                   ),
                   SizedBox(height: 10),
                   Text(
-                    'john.doe@example.com',
+                    'test@gmail.com',
                     style: TextStyle(
                       fontSize: 18,
                       color: Colors.white70,

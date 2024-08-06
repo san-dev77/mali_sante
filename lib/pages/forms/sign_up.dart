@@ -1,4 +1,5 @@
 import 'package:hopitalmap/pages/welcome/welcome_page.dart';
+import 'package:hopitalmap/pages/forms/login.dart';
 import 'package:hopitalmap/pages/truc/delayed_anime.dart';
 import 'package:flutter/material.dart';
 
@@ -157,7 +158,10 @@ class _InscriptionPageState extends State<InscriptionPage> {
                     DelayedAnimation(
                       child: ElevatedButton(
                         onPressed: () {
-                          // Soumettre le formulaire d'inscription
+                          Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (context) => ConnexionPage()));
                         },
                         child: Text('Inscription',
                             style: TextStyle(color: Colors.white)),

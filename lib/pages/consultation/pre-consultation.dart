@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:animate_do/animate_do.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../notification.dart'; // Assurez-vous que ce chemin est correct pour votre projet
 import 'consultation.dart'; // Assurez-vous que ce chemin est correct pour votre projet
 
@@ -71,7 +72,7 @@ class _PreConsultationPageState extends State<PreConsultationPage> {
     });
   }
 
-  void _finishPreConsultation() {
+  void _finishPreConsultation() async {
     List<String> selectedSymptoms = [];
 
     symptomsSection1.forEach((symptom, selected) {
@@ -85,6 +86,10 @@ class _PreConsultationPageState extends State<PreConsultationPage> {
     symptomsSection3.forEach((symptom, selected) {
       if (selected) selectedSymptoms.add(symptom);
     });
+
+    // Enregistrer les symptômes sélectionnés dans SharedPreferences
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.setStringList('selectedSymptoms', selectedSymptoms);
 
     _notificationService.showNotification(
       'Pré-consultation',
@@ -219,9 +224,9 @@ class PreConsultationResultPage extends StatelessWidget {
             SizedBox(height: 20),
             ElevatedButton(
               onPressed: () {
-                // Action pour enregistrer les résultats ou passer à l'étape suivante
+                Navigator.pop(context); // Retour à la page précédente
               },
-              child: Text('Enregistrer'),
+              child: Text('Retour'),
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.blue,
                 padding: EdgeInsets.symmetric(vertical: 15),
